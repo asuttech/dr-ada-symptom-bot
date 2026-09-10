@@ -1,0 +1,43 @@
+# Render Blueprint — see https://render.com/docs/infrastructure-as-code
+#
+# This defines a paid Web Service with an attached persistent disk, which is
+# the reliable setup for a WhatsApp bot: it stays running (no spin-down)
+# and keeps your WhatsApp login across restarts.
+#
+# To use: push this repo to GitHub, then in the Render Dashboard choose
+# "New" > "Blueprint" and point it at your repo. Render reads this file
+# and provisions everything below automatically. You'll still need to set
+# GEMINI_API_KEY and QR_ACCESS_TOKEN as secrets in the dashboard (don't
+# commit real secrets into this file or your repo).
+#
+# Cost: Starter web service ($7/month) + 1GB persistent disk ($0.25/month)
+# ≈ $7.25/month. Cheap for a hackathon, but not free — see README.md for
+# the free-tier alternative and its trade-offs.
+
+services:
+  - type: web
+    name: dr-bee-symptom-bot
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: ENABLE_VOICE_NOTES
+        value: true
+      - key: GEMINI_TTS_MODEL
+        value: gemini-2.5-flash-preview-tts
+      - key: GEMINI_TTS_VOICE
+        value: Kore
+      - key: QR_ACCESS_TOKEN
+        sync: false
+      - key: AUTH_STORAGE_PATH
+        value: /var/data/auth_state
+    disk:
+      name: whatsapp-auth
+      mountPath: /var/data
+      sizeGB: 1
