@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Local Language Symptom Checker for IdentArk x 3MTT AI Hackathon",
   "main": "index.js",
+  "engines": {
+  "node": ">=20.0.0"
+},
   "scripts": {
     "start": "node index.js",
     "test:console": "node test-console.js",
