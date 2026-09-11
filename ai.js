@@ -53,7 +53,6 @@ Even so, if something sounds concerning, err toward YELLOW or RED rather than GR
 
 Do not diagnose specific diseases. Do not recommend specific drug names or dosages.
 Do not discourage anyone from seeking professional care.
-<<<<<<< HEAD
 
 HANDLING PHOTOS: Sometimes the user will send a photo of a visible symptom
 (e.g. a rash, swelling, a wound). Describe only general, plain observations
@@ -69,8 +68,6 @@ typing. Listen to it the same way you'd read a text message, and reply in
 whichever language they spoke in, following the same language-matching
 rules above. If the audio is unclear or hard to understand, say so and ask
 them to repeat or type instead — don't guess at unclear words.
-=======
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 `.trim();
 
 // Gemini uses "user" / "model" roles (not "assistant"), and wraps text in
@@ -83,15 +80,11 @@ function toGeminiContents(history) {
   }));
 }
 
-<<<<<<< HEAD
 // media: optional { mimeType, base64 } for a photo or voice note attached
 // to the user's MOST RECENT message only. We never store raw media bytes in
 // history — each turn's history entry stays a short text placeholder (see
 // index.js), so the conversation payload doesn't balloon over a long chat.
 async function askDrBee(history, turnCount, media) {
-=======
-async function askDrBee(history, turnCount) {
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   if (!API_KEY) {
     console.error(
       '⚠️  GEMINI_API_KEY is not set. Copy .env.example to .env and add your key.'
@@ -105,7 +98,6 @@ async function askDrBee(history, turnCount) {
   }
 
   const contents = toGeminiContents(history);
-<<<<<<< HEAD
 
   // Attach the photo/voice note to the most recent user turn only —
   // rebuild its parts to include both the media and the placeholder text
@@ -120,8 +112,6 @@ async function askDrBee(history, turnCount) {
     }
   }
 
-=======
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
   try {
@@ -200,3 +190,4 @@ function detectTier(replyText) {
 }
 
 module.exports = { askDrBee };
+
