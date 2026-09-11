@@ -14,11 +14,7 @@ const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode'); // generates an actual PNG for browser scanning
 const makeWASocket = require('baileys').default;
-<<<<<<< HEAD
 const { useMultiFileAuthState, DisconnectReason, downloadMediaMessage, getContentType } = require('baileys');
-=======
-const { useMultiFileAuthState, DisconnectReason } = require('baileys');
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 const { Boom } = require('@hapi/boom');
 const { checkRedFlags } = require('./safety-rules');
 const { askDrBee } = require('./ai');
@@ -144,35 +140,21 @@ async function startBot() {
       if (!msg.message || msg.key.fromMe) continue;
 
       const jid = msg.key.remoteJid;
-<<<<<<< HEAD
       const { text, media } = await extractMessageContent(sock, msg);
 
       if (!text.trim() && !media) continue;
-=======
-      const text =
-        msg.message.conversation ||
-        msg.message.extendedTextMessage?.text ||
-        '';
-
-      if (!text.trim()) continue;
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 
       // Queued per-JID so two quick messages from the same person are
       // always handled in order — see session-store.js for why this
       // matters. Different people still run fully in parallel: this only
       // serializes messages that share a JID, and errors are caught so
       // one failed reply can't jam a user's queue for later messages.
-<<<<<<< HEAD
       runInOrder(jid, () => handleIncomingMessage(sock, jid, text.trim(), msg, media))
-=======
-      runInOrder(jid, () => handleIncomingMessage(sock, jid, text.trim(), msg))
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
         .catch(err => console.error('Unhandled error processing message from', jid, err));
     }
   });
 }
 
-<<<<<<< HEAD
 // A safety margin under Gemini's ~20MB total request size limit — WhatsApp
 // photos and voice notes are normally well under this, but guard against
 // an unusually large file rather than let a giant base64 payload fail
@@ -246,9 +228,6 @@ async function extractMessageContent(sock, msg) {
 }
 
 async function handleIncomingMessage(sock, jid, text, originalMsg, media) {
-=======
-async function handleIncomingMessage(sock, jid, text, originalMsg) {
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const session = getSession(jid);
 
   // Reset command for demo purposes
@@ -265,7 +244,6 @@ async function handleIncomingMessage(sock, jid, text, originalMsg) {
   session.history.push({ role: 'user', content: text });
 
   // --- SAFETY LAYER: runs BEFORE the AI decides anything ---
-<<<<<<< HEAD
   // This is deliberately hardcoded and independent of the LLM. Note this
   // only scans TEXT — a photo of something severe (e.g. heavy bleeding)
   // won't trip this regex layer. The system prompt asks the AI to treat
@@ -273,11 +251,6 @@ async function handleIncomingMessage(sock, jid, text, originalMsg) {
   // this hardcoded check gives for text. If ANY red-flag phrase matches
   // the text, we short-circuit straight to the urgent-care response, no
   // matter what the AI would have said.
-=======
-  // This is deliberately hardcoded and independent of the LLM.
-  // If ANY red-flag phrase matches, we short-circuit straight to
-  // the urgent-care response, no matter what the AI would have said.
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const redFlag = checkRedFlags(text);
   if (redFlag) {
     await sendAsDrBee(sock, jid, buildUrgentResponse(redFlag), originalMsg);
@@ -286,11 +259,7 @@ async function handleIncomingMessage(sock, jid, text, originalMsg) {
   }
 
   // --- AI LAYER: ask the LLM for triage + next question ---
-<<<<<<< HEAD
   const aiResult = await askDrBee(session.history, session.turnCount, media);
-=======
-  const aiResult = await askDrBee(session.history, session.turnCount);
->>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 
   session.history.push({ role: 'assistant', content: aiResult.reply });
   session.turnCount += 1;
@@ -366,3 +335,4 @@ async function sendTierMedia(sock, jid, tier) {
 
 startHttpServer();
 startBot();
+
