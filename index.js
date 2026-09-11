@@ -14,7 +14,11 @@ const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode'); // generates an actual PNG for browser scanning
 const makeWASocket = require('baileys').default;
+<<<<<<< HEAD
+const { useMultiFileAuthState, DisconnectReason, downloadMediaMessage, getContentType } = require('baileys');
+=======
 const { useMultiFileAuthState, DisconnectReason } = require('baileys');
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 const { Boom } = require('@hapi/boom');
 const { checkRedFlags } = require('./safety-rules');
 const { askDrBee } = require('./ai');
@@ -140,25 +144,111 @@ async function startBot() {
       if (!msg.message || msg.key.fromMe) continue;
 
       const jid = msg.key.remoteJid;
+<<<<<<< HEAD
+      const { text, media } = await extractMessageContent(sock, msg);
+
+      if (!text.trim() && !media) continue;
+=======
       const text =
         msg.message.conversation ||
         msg.message.extendedTextMessage?.text ||
         '';
 
       if (!text.trim()) continue;
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 
       // Queued per-JID so two quick messages from the same person are
       // always handled in order — see session-store.js for why this
       // matters. Different people still run fully in parallel: this only
       // serializes messages that share a JID, and errors are caught so
       // one failed reply can't jam a user's queue for later messages.
+<<<<<<< HEAD
+      runInOrder(jid, () => handleIncomingMessage(sock, jid, text.trim(), msg, media))
+=======
       runInOrder(jid, () => handleIncomingMessage(sock, jid, text.trim(), msg))
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
         .catch(err => console.error('Unhandled error processing message from', jid, err));
     }
   });
 }
 
+<<<<<<< HEAD
+// A safety margin under Gemini's ~20MB total request size limit — WhatsApp
+// photos and voice notes are normally well under this, but guard against
+// an unusually large file rather than let a giant base64 payload fail
+// confusingly deep inside the Gemini call.
+const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
+
+// Pulls out whatever the user actually sent: plain text, a photo (with
+// optional caption), or a voice note. Returns { text, media } where media
+// is null for text-only messages, or { mimeType, base64 } for photos/audio.
+// `text` is always a string — for media messages with no caption, it's a
+// short placeholder so conversation history has some record of the turn
+// without needing to re-send the raw bytes on every future turn.
+async function extractMessageContent(sock, msg) {
+  const contentType = getContentType(msg.message);
+
+  if (contentType === 'conversation' || contentType === 'extendedTextMessage') {
+    const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+    return { text, media: null };
+  }
+
+  if (contentType === 'imageMessage' || contentType === 'audioMessage') {
+    try {
+      const buffer = await downloadMediaMessage(
+        msg,
+        'buffer',
+        {},
+        { logger: baileysLogger, reuploadRequest: sock.updateMediaMessage }
+      );
+
+      if (buffer.length > MAX_MEDIA_BYTES) {
+        console.warn(`Skipping oversized ${contentType} (${buffer.length} bytes) from`, msg.key.remoteJid);
+        return {
+          text: "That file's a bit too large for me to look at — could you send a smaller one, or just describe it in words?",
+          media: null,
+        };
+      }
+
+      const base64 = buffer.toString('base64');
+
+      if (contentType === 'imageMessage') {
+        const mimeType = msg.message.imageMessage.mimetype || 'image/jpeg';
+        const caption = msg.message.imageMessage.caption?.trim();
+        return {
+          text: caption || '[sent a photo]',
+          media: { mimeType, base64 },
+        };
+      }
+
+      // audioMessage — WhatsApp voice notes typically report a mimetype
+      // like "audio/ogg; codecs=opus". Gemini's documented supported audio
+      // types are plain "audio/ogg" etc. without the codec parameter, so
+      // strip it before sending.
+      const rawMimeType = msg.message.audioMessage.mimetype || 'audio/ogg';
+      const mimeType = rawMimeType.split(';')[0].trim();
+      return {
+        text: '[sent a voice message]',
+        media: { mimeType, base64 },
+      };
+    } catch (err) {
+      console.error(`Failed to download ${contentType}:`, err);
+      return {
+        text: "I couldn't quite load that — could you try sending it again, or describe it in words?",
+        media: null,
+      };
+    }
+  }
+
+  // Unsupported message type (video, document, sticker, location, etc.) —
+  // silently ignored for now rather than replying with confusion.
+  return { text: '', media: null };
+}
+
+async function handleIncomingMessage(sock, jid, text, originalMsg, media) {
+=======
 async function handleIncomingMessage(sock, jid, text, originalMsg) {
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const session = getSession(jid);
 
   // Reset command for demo purposes
@@ -175,9 +265,19 @@ async function handleIncomingMessage(sock, jid, text, originalMsg) {
   session.history.push({ role: 'user', content: text });
 
   // --- SAFETY LAYER: runs BEFORE the AI decides anything ---
+<<<<<<< HEAD
+  // This is deliberately hardcoded and independent of the LLM. Note this
+  // only scans TEXT — a photo of something severe (e.g. heavy bleeding)
+  // won't trip this regex layer. The system prompt asks the AI to treat
+  // visually severe photos as urgent, but that's a softer guarantee than
+  // this hardcoded check gives for text. If ANY red-flag phrase matches
+  // the text, we short-circuit straight to the urgent-care response, no
+  // matter what the AI would have said.
+=======
   // This is deliberately hardcoded and independent of the LLM.
   // If ANY red-flag phrase matches, we short-circuit straight to
   // the urgent-care response, no matter what the AI would have said.
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const redFlag = checkRedFlags(text);
   if (redFlag) {
     await sendAsDrBee(sock, jid, buildUrgentResponse(redFlag), originalMsg);
@@ -186,7 +286,11 @@ async function handleIncomingMessage(sock, jid, text, originalMsg) {
   }
 
   // --- AI LAYER: ask the LLM for triage + next question ---
+<<<<<<< HEAD
+  const aiResult = await askDrBee(session.history, session.turnCount, media);
+=======
   const aiResult = await askDrBee(session.history, session.turnCount);
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 
   session.history.push({ role: 'assistant', content: aiResult.reply });
   session.turnCount += 1;

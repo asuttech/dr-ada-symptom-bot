@@ -53,6 +53,24 @@ Even so, if something sounds concerning, err toward YELLOW or RED rather than GR
 
 Do not diagnose specific diseases. Do not recommend specific drug names or dosages.
 Do not discourage anyone from seeking professional care.
+<<<<<<< HEAD
+
+HANDLING PHOTOS: Sometimes the user will send a photo of a visible symptom
+(e.g. a rash, swelling, a wound). Describe only general, plain observations
+you can actually see (color, apparent size, texture) — never claim a
+diagnosis from a photo alone. If a photo shows something visually severe
+(heavy bleeding, a deep wound, spreading redness, pus, signs of infection),
+treat it with the same urgency as the RED tier regardless of what the user's
+words say. If the photo is unclear or you're unsure what you're looking at,
+say so plainly and ask a clarifying question rather than guessing.
+
+HANDLING VOICE NOTES: Sometimes the user will send a voice note instead of
+typing. Listen to it the same way you'd read a text message, and reply in
+whichever language they spoke in, following the same language-matching
+rules above. If the audio is unclear or hard to understand, say so and ask
+them to repeat or type instead — don't guess at unclear words.
+=======
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
 `.trim();
 
 // Gemini uses "user" / "model" roles (not "assistant"), and wraps text in
@@ -65,7 +83,15 @@ function toGeminiContents(history) {
   }));
 }
 
+<<<<<<< HEAD
+// media: optional { mimeType, base64 } for a photo or voice note attached
+// to the user's MOST RECENT message only. We never store raw media bytes in
+// history — each turn's history entry stays a short text placeholder (see
+// index.js), so the conversation payload doesn't balloon over a long chat.
+async function askDrBee(history, turnCount, media) {
+=======
 async function askDrBee(history, turnCount) {
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   if (!API_KEY) {
     console.error(
       '⚠️  GEMINI_API_KEY is not set. Copy .env.example to .env and add your key.'
@@ -79,6 +105,23 @@ async function askDrBee(history, turnCount) {
   }
 
   const contents = toGeminiContents(history);
+<<<<<<< HEAD
+
+  // Attach the photo/voice note to the most recent user turn only —
+  // rebuild its parts to include both the media and the placeholder text
+  // so the model has both the raw content and whatever context we have.
+  if (media && contents.length > 0) {
+    const lastEntry = contents[contents.length - 1];
+    if (lastEntry.role === 'user') {
+      lastEntry.parts = [
+        { inline_data: { mime_type: media.mimeType, data: media.base64 } },
+        ...lastEntry.parts,
+      ];
+    }
+  }
+
+=======
+>>>>>>> 881127241124a5c906a598957b3d229155bbca8a
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
   try {
